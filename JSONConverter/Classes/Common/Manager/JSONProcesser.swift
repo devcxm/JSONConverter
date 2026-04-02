@@ -62,6 +62,9 @@ class JSONProcesser {
         
         dic.forEach { (item) in
             let keyName = item.key
+            guard !keyName.isEmpty else {
+                return
+            }
             var property: Property?
             
             switch item.value {

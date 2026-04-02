@@ -30,6 +30,7 @@ opt_in_rules:
 excluded:
   - Pods
   - JSONConverter/Vendor
+  - build
 
 line_length:
   warning: 600

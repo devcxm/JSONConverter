@@ -85,7 +85,8 @@ class MainViewController: NSViewController {
     }
     
     private func setupUI() {
-        bottomToolBar.backgroundColor = NSColor(named: "LineColor")
+        // 与行号标尺同时存在时，部分系统版本上设置 LineColor 会导致中间编辑区不绘制；勿在此处给 bottomToolBar 上色
+//        bottomToolBar.backgroundColor = NSColor(named: "LineColor")
         saveBtn.title = "parameter_save_title".localized
         
         languagesPopup.removeAllItems()
@@ -133,6 +134,7 @@ class MainViewController: NSViewController {
     private func loadCacheConfig() {
         let config = FileCacheManager.shared.configFile()
         rootClassField.stringValue = config.rootName
+        JSONTextView.string = FileCacheManager.shared.editorJSONCache()
         languagesPopup.selectItem(at: config.langStruct.langType.rawValue)
         structurePopup.selectItem(at: config.langStruct.structType.rawValue)
         if let themeIndex = highlightr.availableThemes().firstIndex(where: { config.theme == $0 }) {
@@ -140,6 +142,7 @@ class MainViewController: NSViewController {
             let theme = highlightr.availableThemes()[themeIndex]
             upateTextThemeUI(theme)
         }
+        generateClasses()
     }
     
     @IBAction func settingAction(_ sender: NSButton) {
@@ -362,11 +365,20 @@ extension MainViewController: NSTextViewDelegate {
     }
     
     func textDidChange(_ notification: Notification) {
+        let text = JSONTextView.textStorage?.string ?? ""
+        FileCacheManager.shared.updateEditorJSONCache(text)
         generateClasses()
     }
 }
 
 extension MainViewController: NSTextFieldDelegate {
+    func controlTextDidChange(_ obj: Notification) {
+        let config = FileCacheManager.shared.configFile()
+        config.rootName = rootClassField.stringValue
+        FileCacheManager.shared.updateConfigWithFile(config)
+        generateClasses()
+    }
+    
     func controlTextDidEndEditing(_ obj: Notification) {
         let config = FileCacheManager.shared.configFile()
         config.rootName = rootClassField.stringValue
